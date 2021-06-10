@@ -5,75 +5,79 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-//Every non-whitespace character is a token in this language
-//all identifiers are single letter tokens and they can only be variables
 public class Tester {
 
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-        //open the file with the program text and read it
-        //into a String variable for further processing
         Tree tree = new Tree();
         Parser parser = new Parser(new Scanner("program1.txt"), tree);
+
+        Map<String, Integer> nodeMemory = new HashMap<>();
         try {
             parser.parse();
+            tree.root.apply(nodeMemory);
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-
 }
 
 
-//Another name for a scanner is tokenizer
-//According to our grammar every single non-white space
-//is a token!!!!
-//Scanner will read the program line by line and scan
-//every line from left to right returning tokens
+
+// Parser sınıfı yapıcı dosyadan okunan kod bloğunu işleyerek bir ağaç veri yapısına dönüştürür. Dönüştürme işlemini parse metodu ile gerçekleştirir.
+
+class Parser{
+    private final Scanner scanner;
+    private final Tree tree;
+    Parser(Scanner scanner, Tree tree){
+        this.scanner = scanner;
+        this.tree = tree;
+    }
+    void parse() throws Exception {
+        tree.root.check(scanner);
+    }
+}
+
+//Scanner sınıfı parametre olarak aldığı dosya yolundaki dosyayı okur. nextToken metodu ile dosyadan okuduğu kod bloğunun her birini bir token sınıfına dönüştürür.
 class Scanner {
     private String progText;
     private int curPos = 0;
     private TokenFactory tokenFactory;
-    //private String fileName;
+
 
     Scanner(String fileName){
-        //Scanners know about the programming language (they do not know anything about
-        //the grammar). But they know about token types
+
         try {
-            //1st way
             byte [] allBytes = Files.readAllBytes(Paths.get(fileName));
             progText = new String(allBytes);
             this.tokenFactory = new TokenFactory();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
-    //parser will ask the scanner for the next token. Parser knows about
-    //the grammar
+
     Token nextToken() {
         if(curPos == progText.length())
             return tokenFactory.getEOF();
         char curChar;
-        //we skip white space characters
+
         while(curPos < progText.length() && Character.isWhitespace(progText.charAt(curPos)))
             curPos++;
 
         if(curPos == progText.length())
             return tokenFactory.getEOF();
 
-        //we are at the first non-whitespace character
         curChar = progText.charAt(curPos);
         curPos++;
         return tokenFactory.getToken(curChar);
-        //change this by including
-        //the proper remaining token types
-        //return new ErrorToken("NotRecognizedToken");
+
     }
 }
+
+
+
 class TokenFactory{
 
     public Token getToken(char tokenChar){
@@ -129,35 +133,6 @@ class TokenFactory{
         return new EOFToken();
     }
 }
-
-
-
-class Parser{
-    private final Scanner scanner;
-    private final Tree tree;
-    Parser(Scanner scanner, Tree tree){
-        this.scanner = scanner;
-        this.tree = tree;
-    }
-    void parse() throws Exception {
-        tree.root.check(scanner);
-        /*Token token = scanner.nextToken();
-        while(!token.getType().equals(TokenType.END_OF_FILE)) {
-            //print all token texts and their types here for
-            //for example, program1.txt
-
-            System.out.println("Token : "+token.text+" Token Type : "+token.getType());
-
-            token = scanner.nextToken();
-        }*/
-    }
-}
-
-//read the whole program text into a String variable and use it for
-//extracting tokens
-
-
-
 class Token{
     protected String text;
     protected TokenType tokenType;
@@ -171,7 +146,6 @@ class Token{
         return (this.tokenType.equals(TokenType.IF_END) || this.tokenType.equals(TokenType.WHILE_END) ||
                 this.tokenType.equals(TokenType.SEMICOLON) || this.tokenType.equals(TokenType.END_OF_FILE));
     }
-
 }
 class EOFToken extends Token{
     EOFToken(){
@@ -197,133 +171,114 @@ class WhileBegToken extends Token{
         this.tokenType = TokenType.WHILE_BEG;
     }
 }
-
 class WhileEndToken extends Token{
     WhileEndToken(String text){
         super(text);
         this.tokenType = TokenType.WHILE_END;
     }
 }
-
 class IfBeginToken extends Token{
     IfBeginToken(String text){
         super(text);
         this.tokenType = TokenType.IF_BEG;
     }
 }
-
 class IfEndToken extends Token{
     IfEndToken(String text){
         super(text);
         this.tokenType = TokenType.IF_END;
     }
 }
-
 class ErrorToken extends Token{
     ErrorToken(String text){
         super(text);
         this.tokenType = TokenType.NRT_ERROR;
     }
 }
-
 class EqualToken extends Token{
     EqualToken(String text){
         super(text);
         this.tokenType = TokenType.EQUAL;
     }
 }
-
 class SemicolonToken extends Token{
     SemicolonToken(String text){
         super(text);
         this.tokenType = TokenType.SEMICOLON;
     }
 }
-
 class HyphenToken extends Token{
     HyphenToken(String text){
         super(text);
         this.tokenType = TokenType.HYPHEN;
     }
 }
-
 class PlusToken extends Token{
     PlusToken(String text){
         super(text);
         this.tokenType = TokenType.PLUS;
     }
 }
-
 class StarToken extends Token{
     StarToken(String text){
         super(text);
         this.tokenType = TokenType.STAR;
     }
 }
-
 class SlashToken extends Token{
     SlashToken(String text){
         super(text);
         this.tokenType = TokenType.SLASH;
     }
 }
-
 class LessThanToken extends Token{
     LessThanToken(String text){
         super(text);
         this.tokenType = TokenType.LESS_THAN;
     }
 }
-
 class GreaterThanToken extends Token{
     GreaterThanToken(String text){
         super(text);
         this.tokenType = TokenType.GREATER_THAN;
     }
 }
-
 class QuestionMarkToken extends Token{
     QuestionMarkToken(String text){
         super(text);
         this.tokenType = TokenType.QUESTION_MARK;
     }
 }
-
 class RemainderToken extends Token{
     RemainderToken(String text){
         super(text);
         this.tokenType = TokenType.REMAINDER;
     }
 }
-
 class ExponentToken extends Token{
     ExponentToken(String text){
         super(text);
         this.tokenType = TokenType.EXPONENT;
     }
 }
-
 class ColonToken extends Token{
     ColonToken(String text){
         super(text);
         this.tokenType = TokenType.COLON;
     }
 }
-
 class ParenthesesBeg extends Token{
     ParenthesesBeg(String text){
         super(text);
         this.tokenType = TokenType.PARENTHESES_BEG;
     }
 }
-
 class ParenthesesEnd extends Token{
     ParenthesesEnd(String text){
         super(text);
         this.tokenType = TokenType.PARENTHESES_END;
     }
 }
-
 enum TokenType{
     IF_BEG("["), IF_END("]"), WHILE_BEG("{"), WHILE_END("}"), EQUAL("="),
     SEMICOLON(";"), EXPONENT("^"), HYPHEN("-"), PLUS("+"), STAR("*"), SLASH("/"),
@@ -339,18 +294,19 @@ enum TokenType{
 
 }
 
+
 class Tree {
 
-    TreeNode root;
+    RootNode root;
 
     Tree(){
-        this.root = new StatementNode(null);
+        this.root = new RootNode();
+        this.root.init();
     }
 
 }
 
 abstract class TreeNode {
-
     TreeNode parent;
     ArrayList<TreeNode> children;
 
@@ -358,23 +314,43 @@ abstract class TreeNode {
         this.parent = parent;
         this.children = new ArrayList<>();
     }
-
-    abstract void apply();
+    TreeNode(){
+        this.children = new ArrayList<>();
+    }
+    abstract Token apply(Map<String,Integer> nodeMemory) throws Exception;
     abstract Token check(Scanner scanner) throws Exception;
+}
 
+
+class RootNode extends TreeNode{
+    Map<String,Integer> nodeMemory;
+
+    RootNode(){
+        this.nodeMemory = new HashMap<>();
+    }
+    void init(){
+        this.children.add(new StatementNode(this));
+    }
+    @Override
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        return this.children.get(0).apply(nodeMemory);
+    }
+    @Override
+    Token check(Scanner scanner) throws Exception {
+        return this.children.get(0).check(scanner);
+    }
 }
 
 class StatementNode extends TreeNode{
-
     StatementNode(TreeNode parent) {
         super(parent);
     }
-
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        for(TreeNode treeNode : this.children)
+            treeNode.apply(nodeMemory);
+        return null;
     }
-
     @Override
     Token check(Scanner scanner) throws Exception {
         Token token = scanner.nextToken();
@@ -388,7 +364,7 @@ class StatementNode extends TreeNode{
                     nextNode = new WhileNode(this);
                     break;
                 case IDENTIFIER:
-                    nextNode = new AssignmentNode(this, token.text);
+                    nextNode = new AssignmentNode(this, token);
                     break;
                 case LESS_THAN:
                     nextNode = new OutputNode(this);
@@ -397,30 +373,44 @@ class StatementNode extends TreeNode{
                     nextNode = new InputNode(this);
                     break;
             }
-            if (nextNode == null){
-                throw new Exception("Invalid Token, [ or { or letter or < or > expected. Found: "+token.text);
+            if(!token.tokenType.equals(TokenType.COLON)){
+                if (nextNode == null ){
+                    throw new Exception("Invalid Token, [ or { or letter or < or > expected. Found: "+token.text);
+                }else{
+                    nextNode.check(scanner);
+                }
+                token = scanner.nextToken();
             }else{
-                nextNode.check(scanner);
+                break;
             }
-            token = scanner.nextToken();
         }
         if (this.parent != null){
             this.parent.children.add(this);
         }
         return token;
     }
-
 }
 
 class ConditionNode extends TreeNode{
-
     ConditionNode(TreeNode parent) {
         super(parent);
     }
-
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        if(this.children.size() == 2){
+            if (Integer.parseInt(this.children.get(0).apply(nodeMemory).text) != 0){
+                this.children.get(1).apply(nodeMemory);
+            }
+        }else if(this.children.size() == 3){
+            if (Integer.parseInt(this.children.get(0).apply(nodeMemory).text) != 0){
+                this.children.get(1).apply(nodeMemory);
+            }else{
+                this.children.get(2).apply(nodeMemory);
+            }
+        }else{
+            throw new Exception("Runtime Exception");
+        }
+        return null;
     }
 
     @Override
@@ -451,8 +441,13 @@ class WhileNode extends TreeNode{
     }
 
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        while (Integer.parseInt(this.children.get(0).apply(nodeMemory).text) != 0){
+            for(int i=1; i<this.children.size(); i++){
+                this.children.get(i).apply(nodeMemory);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -472,14 +467,19 @@ class WhileNode extends TreeNode{
 
 class AssignmentNode extends TreeNode{
 
-    AssignmentNode(TreeNode parent, String letter) {
+    AssignmentNode(TreeNode parent, Token letter) {
         super(parent);
         this.children.add(new LetterNode(this, letter));
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        int input = Integer.parseInt(this.children.get(1).apply(nodeMemory).text);
 
+        Token identifier = this.children.get(0).apply(nodeMemory);
+        nodeMemory.put(identifier.text, input);
+
+        return identifier;
     }
 
     @Override
@@ -509,8 +509,10 @@ class OutputNode extends TreeNode{
     }
 
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        Token output = this.children.get(0).apply(nodeMemory);
+        System.out.println(output.text);
+        return output;
     }
 
     @Override
@@ -532,8 +534,15 @@ class InputNode extends TreeNode{
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
 
+        int input = scanner.nextInt();
+
+        Token identifier = this.children.get(0).apply(nodeMemory);
+        nodeMemory.put(identifier.text, input);
+
+        return identifier;
     }
 
     @Override
@@ -550,13 +559,44 @@ class InputNode extends TreeNode{
 
 class ENode extends TreeNode{
 
+    ArrayList<Token> operatorList;
     ENode(TreeNode parent) {
         super(parent);
+        operatorList = new ArrayList<>();
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        Token first = this.children.get(0).apply(nodeMemory);
+        int result;
 
+        if(first.tokenType.equals(TokenType.IDENTIFIER)){
+            result = nodeMemory.get(first.text);
+        }else{
+            result = Integer.parseInt(first.text);
+        }
+
+        for(int i=1; i<this.children.size(); i++){
+            Token token = this.children.get(i).apply(nodeMemory);
+            int second;
+            if(token.tokenType.equals(TokenType.IDENTIFIER)){
+                second = nodeMemory.get(token.text);
+            }else{
+                second = Integer.parseInt(token.text);
+            }
+            switch (operatorList.get(i-1).tokenType){
+                case PLUS:
+                    result = result + second;
+                    break;
+                case HYPHEN:
+                    result = result - second;
+                    break;
+                default:
+                    throw new Exception("Runtime Error: Invalid operator. Expected - or +. Found : "+operatorList.get(i-1).text);
+
+            }
+        }
+        return new NumberToken(String.valueOf(result));
     }
 
     @Override
@@ -568,9 +608,10 @@ class ENode extends TreeNode{
                 token.tokenType.equals(TokenType.QUESTION_MARK) || token.tokenType.equals(TokenType.PARENTHESES_END))){
 
             if (token.tokenType.equals(TokenType.PLUS) || token.tokenType.equals(TokenType.HYPHEN)){
+                this.operatorList.add(token);
                 TNode secondTNode = new TNode(this);
-
                 token = secondTNode.check(scanner);
+
             }else {
                 throw new Exception("Invalid token, + or - expected. Found: "+token.text);
             }
@@ -583,13 +624,57 @@ class ENode extends TreeNode{
 
 class TNode extends TreeNode{
 
+
+    ArrayList<Token> operatorList;
+
     TNode(TreeNode parent) {
         super(parent);
+        this.operatorList = new ArrayList<>();
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
 
+        Token first = this.children.get(0).apply(nodeMemory);
+        int result;
+
+        if(first.tokenType.equals(TokenType.IDENTIFIER)){
+            result = nodeMemory.get(first.text);
+        }else{
+            result = Integer.parseInt(first.text);
+        }
+
+
+        for(int i=1; i<this.children.size(); i++){
+
+            Token token = this.children.get(i).apply(nodeMemory);
+            int second;
+            if(token.tokenType.equals(TokenType.IDENTIFIER)){
+                second = nodeMemory.get(token.text);
+            }else{
+                second = Integer.parseInt(token.text);
+            }
+
+            switch (operatorList.get(i-1).tokenType){
+
+                case STAR:
+
+                    result = result * second;
+                    break;
+                case SLASH:
+                    result = result / second;
+                    break;
+                case REMAINDER:
+                    result = result % second;
+                    break;
+                default:
+                    throw new Exception("Runtime Error: Invalid operator. Expected * or / or %. Found : "+operatorList.get(i-1).text);
+
+            }
+        }
+
+
+        return new NumberToken(String.valueOf(result));
     }
 
     @Override
@@ -603,8 +688,10 @@ class TNode extends TreeNode{
 
             if (token.tokenType.equals(TokenType.STAR) || token.tokenType.equals(TokenType.SLASH) ||
                     token.tokenType.equals(TokenType.REMAINDER)){
+                this.operatorList.add(token);
                 UNode secondUNode = new UNode(this);
                 token = secondUNode.check(scanner);
+
             }else {
                 throw new Exception("Invalid token, * or / or % expected. Found: "+token.text);
             }
@@ -621,8 +708,51 @@ class UNode extends TreeNode{
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        if(this.children.size() == 2){
 
+            Token first = this.children.get(0).apply(nodeMemory);
+            Token second = this.children.get(1).apply(nodeMemory);
+
+            if(first.getType().equals(TokenType.NUMBER)){
+
+                int base = Integer.parseInt(first.text);
+
+                if(second.getType().equals(TokenType.NUMBER)){
+                    int result = (int) Math.pow(base,Integer.parseInt(second.text));
+                    return new NumberToken(String.valueOf(result));
+
+                }else if(second.getType().equals(TokenType.IDENTIFIER)){
+                    int result = (int) Math.pow(base,nodeMemory.get(second.text));
+                    return new NumberToken(String.valueOf(result));
+                }else{
+                    throw new Exception("Runtime Exception : Invalid Token, digit or letter expected. Found: "+ second.text);
+                }
+
+            }else if(first.getType().equals(TokenType.IDENTIFIER)){
+
+                int base = nodeMemory.get(first.text);
+
+                if(second.getType().equals(TokenType.NUMBER)){
+                    int result = (int) Math.pow(base,Integer.parseInt(second.text));
+                    return new NumberToken(String.valueOf(result));
+
+                }else if(second.getType().equals(TokenType.IDENTIFIER)){
+                    int result = (int) Math.pow(base,nodeMemory.get(second.text));
+                    return new NumberToken(String.valueOf(result));
+                }else{
+                    throw new Exception("Runtime Exception : Invalid Token, digit or letter expected. Found: "+ second.text);
+                }
+            }else{
+                throw new Exception("Runtime Exception : Invalid Token, digit or letter expected. Found: "+ first.text);
+            }
+
+        }else if(this.children.size() == 1){
+
+            return this.children.get(0).apply(nodeMemory);
+        }else{
+            throw new Exception("Runtime Exception : Invalid expression.");
+        }
     }
 
     @Override
@@ -652,8 +782,9 @@ class FNode extends TreeNode{
     }
 
     @Override
-    void apply() {
+    Token apply(Map<String,Integer> nodeMemory) throws Exception {
 
+        return this.children.get(0).apply(nodeMemory);
     }
 
     @Override
@@ -664,12 +795,14 @@ class FNode extends TreeNode{
             token = eNode.check(scanner);
             if (!token.tokenType.equals(TokenType.PARENTHESES_END)){
                 throw new Exception("Invalid Token, ) or letter or digit expected");
+            }else{
+                token = scanner.nextToken();
             }
         }else if (token.tokenType.equals(TokenType.IDENTIFIER)){
-            LetterNode letterNode = new LetterNode(this, token.text);
+            LetterNode letterNode = new LetterNode(this, token);
             token = letterNode.check(scanner);
         }else if (token.tokenType.equals(TokenType.NUMBER)){
-            DigitNode digitNode = new DigitNode(this, Integer.parseInt(token.text));
+            DigitNode digitNode = new DigitNode(this, token);
             token = digitNode.check(scanner);
         }else {
             throw new Exception("Invalid Token, ( or letter or digit expected. Found: "+token.text);
@@ -681,16 +814,16 @@ class FNode extends TreeNode{
 
 class LetterNode extends TreeNode{
 
-    String letter;
+    Token letter;
 
-    LetterNode(TreeNode parent, String letter) {
+    LetterNode(TreeNode parent, Token letter) {
         super(parent);
         this.letter = letter;
     }
 
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) {
+        return this.letter;
     }
 
     @Override
@@ -702,16 +835,16 @@ class LetterNode extends TreeNode{
 
 class DigitNode extends TreeNode{
 
-    int digit;
+    Token digit;
 
-    DigitNode(TreeNode parent, int digit) {
+    DigitNode(TreeNode parent, Token digit) {
         super(parent);
         this.digit = digit;
     }
 
     @Override
-    void apply() {
-
+    Token apply(Map<String,Integer> nodeMemory) {
+        return this.digit;
     }
 
     @Override
