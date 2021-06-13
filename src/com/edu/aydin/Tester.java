@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Tester {
@@ -17,10 +18,26 @@ public class Tester {
         Map<String, Integer> nodeMemory = new HashMap<>();
         try {
             parser.parse();
+            dft(tree.root);
             tree.root.apply(nodeMemory);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+
+
+    }
+
+    static void dft(TreeNode tr){
+
+
+        for(TreeNode treeNode : tr.children){
+
+            dft(treeNode);
+
+        }
+        System.out.println(tr.getClass().getName().split("com.edu.aydin.")[1]);
     }
 }
 
@@ -75,8 +92,6 @@ class Scanner {
 
     }
 }
-
-
 
 class TokenFactory{
 
@@ -333,17 +348,35 @@ class RootNode extends TreeNode{
     }
     @Override
     Token apply(Map<String,Integer> nodeMemory) throws Exception {
+        Token t;
+        for(TreeNode treeNode : this.children){
+            t = treeNode.apply(nodeMemory);
+
+        }
         return this.children.get(0).apply(nodeMemory);
     }
     @Override
     Token check(Scanner scanner) throws Exception {
-        return this.children.get(0).check(scanner);
+
+        Token token = this.children.get(0).check(scanner);
+        while (!token.isTerminal()){
+            StatementNode statementNode = new StatementNode(this,token);
+            this.children.add(statementNode);
+            token = statementNode.check(scanner);
+        }
+        return token;
     }
 }
 
 class StatementNode extends TreeNode{
+
+    Token token;
     StatementNode(TreeNode parent) {
         super(parent);
+    }
+    StatementNode(TreeNode parent, Token token) {
+        super(parent);
+        this.token = token;
     }
     @Override
     Token apply(Map<String,Integer> nodeMemory) throws Exception {
@@ -353,8 +386,11 @@ class StatementNode extends TreeNode{
     }
     @Override
     Token check(Scanner scanner) throws Exception {
-        Token token = scanner.nextToken();
-        while (!token.isTerminal()){
+
+        if(this.token == null){
+            this.token = scanner.nextToken();
+        }
+
             TreeNode nextNode = null;
             switch (token.tokenType){
                 case IF_BEG:
@@ -380,13 +416,8 @@ class StatementNode extends TreeNode{
                     nextNode.check(scanner);
                 }
                 token = scanner.nextToken();
-            }else{
-                break;
             }
-        }
-        if (this.parent != null){
-            this.parent.children.add(this);
-        }
+
         return token;
     }
 }
@@ -455,8 +486,12 @@ class WhileNode extends TreeNode{
         ENode eNode = new ENode(this);
         Token token = eNode.check(scanner);
         if (token.tokenType.equals(TokenType.QUESTION_MARK)){
-            StatementNode statementNode = new StatementNode(this);
-            statementNode.check(scanner);
+            token = scanner.nextToken();
+            while (!token.isTerminal()){
+                StatementNode statementNode = new StatementNode(this, token);
+                this.children.add(statementNode);
+                token = statementNode.check(scanner);
+            }
         }else {
             throw new Exception("Invalid token, ? is expected. Found: "+token.text);
         }
